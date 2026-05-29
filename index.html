@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>kChat - Loading...</title> 
+    <meta charset="utf-8">
+    <style>
+        body {
+            background-color: #373736;
+            color: #c3c3c5;
+            font-family: Verdana, sans-serif;
+            padding-bottom: 50px;
+        }
+
+        a:link, a:visited, button {
+            background-color: #3d3d3d;
+            color: white;
+            padding: 20px 25px;
+            margin: 3px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        a:hover, a:active, button:hover {
+            background-color: #353535;
+        }
+
+        #messageInput {
+            margin: 0 1% 1% 2%;
+            padding: 1%;
+            width: 90%;
+            font-size: 2em;
+            text-align: left;
+            border-radius: 100px;
+            border: 0.5em outset;
+            position: fixed;
+            bottom: 0;
+            color: Grey;
+        }
+
+        #homeLink {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+
+        #settingsLink, #contactLink {
+            position: absolute;
+            top: 10px;
+            right: 120px;
+        }
+
+        .message {
+            background-color: #5f5f5f;
+            color: #c3c3c5;
+            padding: 0.5em 1em;
+            margin: 0.5em 0;
+            border-radius: 1.5em;
+            height: auto;
+            max-width: 100%;
+            word-wrap: break-word;
+        }
+
+        .message img {
+            max-width: 85.9vw !important;
+            max-height: 49.9vh !important;
+            height: auto !important;
+            width: auto !important;
+            border-radius: 0.5em;
+            display: block;
+        }
+
+        #Logo-Inline-Button {
+            position: absolute;
+            top: 13px;
+            right: 13px;
+            width:60px;
+            height:60px;
+        }
+        
+        #Logo-Inline {
+        	position: absolute;
+            top:0;
+            right:0;
+        }
+
+        .timestamp {
+            font-size: 0.8em;
+            color: #a0a0a0;
+        }
+
+        .messageContainer {
+            margin: 1% 10% 1% 1%;
+            width: 90%;
+            font-size: 1.5em;
+            text-align: left;
+            line-height: 1.5em;
+            padding: 2em;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        #customCSS {
+            width: 93%;
+            padding: 1% 1% 1% 5%;
+            font-size: 1.2em;
+            text-align: left;
+            border-radius: 100px;
+            border: 0.5em outset rgb(0, 0, 0);
+        }
+
+        footer {
+            position: fixed;
+            bottom: 0px;
+            width: 100%;
+            height: 15%;
+            background-color: #484848;
+        }
+
+        footer a {
+            margin: 2px;
+            display: inline;
+        }
+
+        .sidebar  {
+            height: 100%;
+            width: 25%;
+            position: relative;
+        }
+
+        div.content {
+            margin-left: 25%;
+        }
+
+        dialog {
+            background-color: #484848;
+            color: #c3c3c5;
+            border: 2px solid #111;
+            border-radius: 15px;
+            padding: 2em;
+            text-align: center;
+        }
+
+        dialog::backdrop {
+            background: rgba(0, 0, 0, 0.75);
+        }
+        
+        #welcomeMessage {
+        	font-size: 0.5em;
+            color: grey;
+        }
+    </style>
+    <link rel="icon" type="image/x-icon" href="https://raw.githubusercontent.com/korynthian/chatroom/refs/heads/main/img/logo.ico">
+</head>
+<body>
+    <button id="Logo-Inline-Button" onclick="document.getElementById('launch').showModal()">
+         <img id="Logo-Inline" src="https://raw.githubusercontent.com/korynthian/chatroom/refs/heads/main/img/logo.png" alt="kChat Logo" height="60px">
+    </button>
+
+    <h1><span id="roomNameHeader"> 𝓀Chatˡᶦᵗᵉ </span>   <span id="welcomeMessage"></span></h1>
+ 
+
+    <div class="messageContainer">
+        <p id="messageBox"> Welcome!</p>
+    </div>
+
+    <div>
+        <input type="text" placeholder="Type Here" class="textInput" id="messageInput">
+    </div>
+    
+    <dialog id="launch">
+        <h1>Welcome to 𝓀Chatˡᶦᵗᵉ!</h1>
+        <p> Pick a room! </p>
+        <p id="RoomNamesPlaceholder"> Rooms should be here!</p>
+    </dialog>
+    
+    <dialog id="usernameDialog">
+        <h1>Pick a username.</h1>
+        <input type="text" id="usernameInput" placeholder="JohnDoe" style="padding: 10px; font-size: 1.2em; border-radius: 5px; border: none; margin-bottom: 15px;">
+        <br>
+        <button onclick="pickUsername()">Submit</button>
+    </dialog>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <script>
+        const supabaseUrl = 'https://mqxmptmzegpftuuekexf.supabase.co';
+        const supabaseKey = 'sb_publishable_VhAXbd4iQbv94RkePc1Rdw_nq4IbcVD';
+        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+        const body = document.body;
+        const messageBox = document.getElementById('messageBox');
+        const messageInput = document.getElementById('messageInput');
+        const roomNameHeader = document.getElementById('roomNameHeader');
+        let room_id = 1;
+        let username = "Secret";
+        
+        document.getElementById("launch").showModal();
+        
+        const RoomNamesPlaceholder = document.getElementById('RoomNamesPlaceholder');
+
+        async function fetchRoomNames() {
+            RoomNamesPlaceholder.innerHTML = "<p>Loading rooms...</p>";
+            console.log("Getting names...");
+            const { data, error } = await supabaseClient
+                .from('rooms')
+                .select('id, name, created_at')
+                .order('created_at', { ascending: true })
+
+            if (error) {
+                console.error('Error fetching table name', error)
+            } else if (!data || data.length === 0) {
+                RoomNamesPlaceholder.innerHTML = "<p>No rooms available.</p>";
+            } else {
+                RoomNamesPlaceholder.innerHTML = data.map(room => `<button onclick="setRoom(${room.id})">${room.name}</button>`).join('');
+            }
+        };
+
+        fetchRoomNames();
+        
+        function setRoom(roomIDInput) {
+            room_id = roomIDInput;
+            document.getElementById("launch").close();
+            document.getElementById("usernameDialog").showModal();
+        }
+        
+        function pickUsername() {
+            username = document.getElementById("usernameInput").value || "Secret" + Math.floor(Math.random() * 100000000) + room_id; ;
+            fetchRoomName();
+            displayMessages();
+            document.getElementById("usernameDialog").close();
+            setInterval(displayMessages, 1000);
+        }
+
+        let roomName = "Loading Room Name...";
+        async function fetchRoomName() {
+            console.log("Fetching room name for ID:", Number(room_id));
+            const { data, error } = await supabaseClient
+            .from('rooms')
+            .select('id, name')
+            .eq('id', Number(room_id))
+            .maybeSingle();
+
+            if (error) {
+                console.error('Error fetching table name', error)
+            } else if (!data) {
+                roomName = "Not real";
+            } else {
+                roomName = data.name;
+            }
+
+            document.title = `kChat - ${roomName}`;
+            document.getElementById('roomNameHeader').textContent = `${roomName}`;
+            document.getElementById("welcomeMessage").textContent = `Welcome, ${username}!`
+        };
+
+        function scrollToBottom() {
+            const container = document.querySelector('.messageContainer');
+            container.scrollTop = container.scrollHeight;
+        }
+
+        async function displayMessages() {
+            const { data, error } = await supabaseClient
+            .from('messages')
+            .select('id, username, content, created_at')
+            .eq('room_id', Number(room_id))
+            .order('created_at', { ascending: true })
+            if (error) {
+                console.error('Error fetching messages:', error)
+            } else {
+                let previousMessages = messageBox.innerHTML;
+                messageBox.innerHTML = 
+                data.map(msg => `<p class="message" id="message${msg.id}">
+                <strong>${msg.username}</strong>: 
+                ${msg.content} 
+                <span class="timestamp">
+                ${new Date(msg.created_at).toLocaleString()}
+                </span></p>`)
+                .join('') || "No messages yet.";
+                
+                let currentMessages = messageBox.innerHTML;
+                if (previousMessages !== currentMessages) {
+                    scrollToBottom();
+                }
+            }
+        }
+
+        messageInput.addEventListener("keydown", async (event) => {
+            if (event.key === "Enter" && messageInput.value.trim() !== "") {
+                const { data, error } = await supabaseClient
+                    .from('messages')
+                    .insert({
+                    room_id: room_id,
+                    username: username,
+                    content: messageInput.value
+                    })
+                if (error) {
+                    console.error('Error inserting message:', error)
+                } else {
+                    scrollToBottom();
+                }
+                messageInput.value = "";
+                displayMessages();
+            }
+        });
+    </script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"40997a1ebd124ff79d67979037becbc2","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+</body>
+</html>
